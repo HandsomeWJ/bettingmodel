@@ -32,6 +32,14 @@ def Kelly(oddsDecimal, probability):
 
 def reverseKelly(payout, Kelly):
 	return( (kelly * payout -1)/(1+payout) )
+
+def reverseOdds(dec):
+	if dec>2:
+		val = (dec - 1)*100
+		return "+" + str(int(val))
+	else:
+		val = 100/(dec - 1)
+		return "-" + str(int(val))
 	
 def powerLaw(portfolioAmt,df):
   probs = np.array([(1-(1/i)) for i in df['Payouts (per Dollar)'].values]) #can be used for higher risk tolerance though unused here
@@ -93,14 +101,17 @@ def dailyReturn():
 		portfolioTracked = pd.read_csv(os.getcwd() + '/masterDaily.csv')
 		today = str(date.today() - timedelta(1))
 		portfolioTracking = portfolioTracked[portfolioTracked.Date == today]
-		bet = powerLaw(portfolioAmt, portfolioTracking).round(2)
+		bet = powerLaw(portfolioAmt, portfolioTracking).round(3)
 		bet.to_csv(os.getcwd() + '/masterDailyRecap.csv')
 		
 		tomorrow = str(date.today())
 		portfolioTrackingTom = portfolioTracked[portfolioTracked.Date == tomorrow]
-		bettor = powerLaw(portfolioAmt, portfolioTrackingTom).round(3)
+		bettor = powerLaw(portfolioAmt, portfolioTrackingTom).round(5)
 		bettor.to_csv(os.getcwd() + '/masterUpcoming.csv')
-		bettors = bettor[['Bet State Chosen', 'Allocation Percentage', 'League', 'Payouts (per Dollar)']]
+		bettors = bettor[['Bet State Chosen', 'Allocation Percentage', 'League', 'Payouts (per Dollar)', 'Date']]
+		bettors['Allocation Percentage'] = [i*100 for i in bettors['Allocation Percentage']]
+		bettors = bettors.round(4)
+		bettors['American Odds'] = [reverseOdds(i) for i in bettors['Payouts (per Dollar)']]
 		bettors = bettors[bettors['Allocation Percentage'] > 0.001]
 		bettors.to_csv(os.getcwd() + '/masterPush.csv')
 		
